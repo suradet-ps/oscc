@@ -7,4 +7,11 @@ rust-version.workspace = true
 description = "The only crate allowed to talk to HOSxP — SELECT-only, guarded, parameterized"
 
 [dependencies]
+secrecy.workspace = true
+sqlx.workspace = true
 thiserror.workspace = true
+tokio.workspace = true
+
+[features]
+# Live-instance tests only; never part of the default test run (AGENTS.md §8).
+integration-tests = []

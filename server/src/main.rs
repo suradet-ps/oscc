@@ -70,10 +70,16 @@ async fn patient_source() -> Option<SharedPatientSource> {
         return Some(Arc::new(patients::FakeDevSource));
     }
 
-    let cfg = match oscc_hosxp_connector::HosxConfig::from_env() {
-        Ok(cfg) => cfg,
-        Err(_) => {
-            tracing::warn!("OSCC_HOSXP_* is not set: patient lookup disabled");
+    let cfg = match load_hosxp_config().await {
+        Some(Ok(cfg)) => cfg,
+        Some(Err(err)) => {
+            tracing::warn!(error = %err, "HOSxP credentials unreadable: patient lookup disabled");
+            return None;
+        }
+        None => {
+            tracing::warn!(
+                "HOSxP is not configured (no encrypted config file, no OSCC_HOSXP_*): patient lookup disabled"
+            );
             return None;
         }
     };
@@ -88,6 +94,40 @@ async fn patient_source() -> Option<SharedPatientSource> {
             None
         }
     }
+}
+
+/// Resolves HOSxP credentials: the encrypted file first (recommended),
+/// then `OSCC_HOSXP_*` environment variables (CI and quick dev).
+async fn load_hosxp_config()
+-> Option<Result<oscc_hosxp_connector::HosxConfig, oscc_hosxp_connector::ConfigError>> {
+    let path = std::env::var("OSCC_HOSXP_CONFIG")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| std::path::PathBuf::from(oscc_hosxp_connector::CONFIG_FILE_NAME));
+
+    if path.exists() {
+        let store = match oscc_hosxp_connector::load_vault() {
+            Ok(store) => store,
+            Err(err) => return Some(Err(err)),
+        };
+        return match oscc_hosxp_connector::config::load(&path, &store).await {
+            Ok(Some(cfg)) => {
+                tracing::info!(path = %path.display(), "HOSxP credentials loaded from the encrypted config");
+                Some(Ok(cfg))
+            }
+            Ok(None) => None,
+            Err(err) => Some(Err(err)),
+        };
+    }
+
+    let has_env = std::env::var("OSCC_HOSXP_HOST")
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .is_some();
+    if has_env {
+        return Some(oscc_hosxp_connector::HosxConfig::from_env());
+    }
+
+    None
 }
 
 /// Installs PII-free structured logging. The default filter is `info`;

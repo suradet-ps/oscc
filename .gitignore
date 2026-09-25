@@ -8,3 +8,4 @@
 # Secrets — never committed (AGENTS.md §2)
 .env
 *.key
+hosxp.config.json

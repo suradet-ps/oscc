@@ -39,6 +39,20 @@ pub enum Role {
     Admin,
 }
 
+impl Role {
+    /// The stable machine name used by storage and the API.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::ErNurse => "er_nurse",
+            Self::ForensicPhysician => "forensic_physician",
+            Self::SocialWorker => "social_worker",
+            Self::Psychologist => "psychologist",
+            Self::OsccLead => "oscc_lead",
+            Self::Admin => "admin",
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -49,5 +63,12 @@ mod tests {
         assert_eq!(role, "\"oscc_lead\"");
         let department = serde_json::to_string(&Department::SocialWork).expect("serialize");
         assert_eq!(department, "\"social_work\"");
+    }
+
+    #[test]
+    fn role_machine_names_are_stable() {
+        assert_eq!(Role::ErNurse.as_str(), "er_nurse");
+        assert_eq!(Role::ForensicPhysician.as_str(), "forensic_physician");
+        assert_eq!(Role::Admin.as_str(), "admin");
     }
 }

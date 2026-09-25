@@ -1,8 +1,10 @@
 //! OSCC central API (AGENTS.md §3).
 //!
 //! The only writer of OSCC data, and the only component allowed to read
-//! HOSxP. M0 ships the app shell and the health endpoint; authentication,
-//! RBAC, the append-only audit, and the database arrive in M1.
+//! HOSxP. M1 builds the trust layer: append-only audit, local auth, and
+//! RBAC enforcement on top of the M0 shell.
+
+pub mod audit;
 
 use std::time::Instant;
 

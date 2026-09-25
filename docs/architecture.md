@@ -41,8 +41,14 @@
 6. **Audit is append-only.** Every open/view/reveal/edit/print/export writes
    an entry. Hash chaining (`AuditEntry`) arrives in M1; application roles
    can never update or delete audit rows.
-7. **LAN only, TLS required.** The server binds loopback by default;
-   binding to the LAN is an explicit deployment choice (`OSCC_BIND`).
+7. **LAN only; TLS for API traffic.** The server binds loopback by
+   default; binding to the LAN is an explicit deployment choice
+   (`OSCC_BIND`) and the API is expected to sit behind TLS. The HOSxP
+   MySQL link is the documented exception: the pilot instance has TLS
+   disabled, so the connector uses opportunistic TLS (`Preferred`) and the
+   read-only grant, session mode, and SQL guard remain the enforced
+   boundaries. Set `OSCC_HOSXP_SSL_MODE=required|verify_ca|verify_identity`
+   once the DBA enables TLS — no code change needed.
 8. **Deadline policy lives in `oscc-core`.** Windows and warning leads are
    pure functions with tests; the UI only renders what they return.
 9. **Local accounts first (M1).** Argon2id password hashes; opaque 256-bit

@@ -2,8 +2,10 @@
 //!
 //! HOSxP is read-only, always: a dedicated `GRANT SELECT` user, a read-only
 //! session, the SQL guard in [`readonly_guard`], and parameterized queries
-//! on top. The pool requires TLS (`ssl-mode=REQUIRED`), and the password is
-//! a `SecretString` end to end.
+//! on top. TLS is opportunistic by default (`OSCC_HOSXP_SSL_MODE` raises it
+//! to required/verified once the server offers it), and the password is a
+//! `SecretString` end to end. Credentials can live encrypted on disk —
+//! see [`config`].
 
 pub mod config;
 pub mod error;

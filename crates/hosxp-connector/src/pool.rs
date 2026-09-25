@@ -1,4 +1,11 @@
-//! MySQL connection pool with an enforced read-only session and TLS.
+//! MySQL connection pool with an enforced read-only session.
+//!
+//! TLS is opportunistic by default: the pilot HOSxP instance has TLS
+//! disabled (verified against the live server), so a hard `Required` would
+//! simply make the connection impossible. This is a documented residual —
+//! the read-only grant, the session mode, and the SQL guard remain the
+//! enforced boundaries — and `OSCC_HOSXP_SSL_MODE` raises the bar without a
+//! code change once the DBA enables TLS.
 
 use std::time::Duration;
 
@@ -15,10 +22,10 @@ const MAX_CONNECTIONS: u32 = 5;
 /// How long to wait for a connection before reporting the database down.
 const ACQUIRE_TIMEOUT: Duration = Duration::from_secs(5);
 
-/// Minimum TLS posture: the channel must be encrypted. `Required` never
-/// falls back to plaintext; certificate verification (`VerifyCa`) is the
-/// follow-up once the hospital CA is available (docs/runbook.md).
-const SSL_MODE: MySqlSslMode = MySqlSslMode::Required;
+/// Default TLS posture: use TLS when the HOSxP server offers it, fall back
+/// to an unencrypted channel when it does not. The credentials stay on the
+/// hospital LAN and are protected by the read-only account itself.
+const DEFAULT_SSL_MODE: MySqlSslMode = MySqlSslMode::Preferred;
 
 /// Server-side SELECT timeout: a pathological query cannot hang a shift.
 /// Best-effort — servers without the variable ignore the error.
@@ -26,8 +33,6 @@ const STATEMENT_TIMEOUT_SESSION_SQL: &str = "SET SESSION max_execution_time = 50
 
 /// Opens a pool of read-only MySQL connections.
 ///
-/// The channel is encrypted by contract: a server without TLS makes the
-/// connection fail instead of silently sending credentials in plaintext.
 /// Every new connection immediately runs `SET SESSION TRANSACTION READ
 /// ONLY`, so the session itself rejects DML even if a non-SELECT statement
 /// slips through the application-level guard (AGENTS.md §2 rule 1).
@@ -41,7 +46,7 @@ pub async fn connect(cfg: &HosxConfig) -> Result<MySqlPool, Error> {
         .port(cfg.port)
         .database(&cfg.database)
         .username(&cfg.user)
-        .ssl_mode(SSL_MODE)
+        .ssl_mode(configured_ssl_mode())
         // sqlx keeps its own plaintext copy inside the pool for reconnects;
         // documented residual, everything under our control is zeroized.
         .password(cfg.password.expose_secret());
@@ -76,4 +81,53 @@ pub async fn ping(pool: &MySqlPool) -> Result<(), Error> {
         .await
         .map(|_| ())
         .map_err(Error::Database)
+}
+
+/// The TLS posture in effect, read from `OSCC_HOSXP_SSL_MODE`.
+///
+/// Accepted values (case-insensitive): `preferred` (default), `required`,
+/// `verify_ca`, `verify_identity`. Anything else falls back to `preferred`.
+fn configured_ssl_mode() -> MySqlSslMode {
+    ssl_mode_from(std::env::var("OSCC_HOSXP_SSL_MODE").ok().as_deref())
+}
+
+/// Pure resolver for the TLS posture, so the mapping is testable.
+fn ssl_mode_from(raw: Option<&str>) -> MySqlSslMode {
+    match raw.map(str::trim).map(str::to_ascii_lowercase).as_deref() {
+        Some("required") => MySqlSslMode::Required,
+        Some("verify_ca") => MySqlSslMode::VerifyCa,
+        Some("verify_identity") => MySqlSslMode::VerifyIdentity,
+        _ => DEFAULT_SSL_MODE,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ssl_mode_defaults_to_preferred() {
+        assert!(matches!(ssl_mode_from(None), MySqlSslMode::Preferred));
+        assert!(matches!(
+            ssl_mode_from(Some("nonsense")),
+            MySqlSslMode::Preferred
+        ));
+        assert!(matches!(ssl_mode_from(Some("  ")), MySqlSslMode::Preferred));
+    }
+
+    #[test]
+    fn ssl_mode_accepts_explicit_modes_case_insensitively() {
+        assert!(matches!(
+            ssl_mode_from(Some("required")),
+            MySqlSslMode::Required
+        ));
+        assert!(matches!(
+            ssl_mode_from(Some(" VERIFY_CA ")),
+            MySqlSslMode::VerifyCa
+        ));
+        assert!(matches!(
+            ssl_mode_from(Some("verify_identity")),
+            MySqlSslMode::VerifyIdentity
+        ));
+    }
 }

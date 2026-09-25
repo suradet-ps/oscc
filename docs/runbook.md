@@ -85,6 +85,51 @@ OSCC_TEST_DATABASE_URL=postgres://oscc_app:***@127.0.0.1:5432/oscc_test cargo te
 `cargo agentforge diff`. Project deviations go in its §14 as
 `[OVERRIDE §<section>]` lines; `.agentforge.json` is never hand-edited.
 
+## HOSxP credentials (encrypted)
+
+The connector never reads credentials from the repo. Two sources, in
+order of preference:
+
+1. **Encrypted file** — every field AES-256-GCM encrypted with
+   `encryptman`, master key in the OS keychain (service `oscc`). The
+   password arrives on stdin, never argv:
+
+   ```
+   printf '%s' '<HOSXP_RO_PASSWORD>' | cargo run -p oscc-server --example set_hosxp_config -- <host> <port> <database> <user>
+   ```
+
+   Writes to `$OSCC_HOSXP_CONFIG`, or `hosxp.config.json` in the working
+   directory. The file is gitignored and contains no plaintext.
+
+2. **Environment** — `OSCC_HOSXP_HOST`, `OSCC_HOSXP_PORT` (default 3306),
+   `OSCC_HOSXP_DATABASE`, `OSCC_HOSXP_USER`, `OSCC_HOSXP_PASSWORD` for CI
+   and quick dev.
+
+The server prefers the encrypted file when both are present. For local
+development without HOSxP, `OSCC_PATIENT_SOURCE=fake` serves one synthetic
+patient — never use it in a real deployment.
+
+### TLS on the HOSxP link
+
+The pilot HOSxP server has TLS disabled, so the link is unencrypted on the
+hospital LAN by default (`ssl-mode=Preferred`: TLS when the server offers
+it, plaintext otherwise). This is a documented residual; the enforced
+boundaries are the dedicated `GRANT SELECT` account, the read-only session,
+and the SQL guard. When the DBA enables TLS, raise the bar without a code
+change:
+
+```
+OSCC_HOSXP_SSL_MODE=required          # encrypt, no certificate validation
+OSCC_HOSXP_SSL_MODE=verify_ca         # + verify the chain
+OSCC_HOSXP_SSL_MODE=verify_identity   # + verify the hostname
+```
+
+Testing against a live instance is feature-gated:
+
+```
+cargo test -p oscc-hosxp-connector --features integration-tests
+```
+
 ## Deployment (M5 — placeholders, do not run yet)
 
 - Install PostgreSQL as a Windows service; data volume on BitLocker.

@@ -24,12 +24,14 @@ masked until someone with a reason unmasks it.
 Nothing writes to HOSxP. Nothing identifies a patient in a log. Nothing
 opens outside the hospital LAN.
 
-| M0 ▣ | M1-M5 ☐ | Phase 2 ☐ | Phase 3 ☐ |
-|---|---|---|---|
+| M0 ▣ | M1 ▣ | M2-M5 ☐ | Phase 2 ☐ | Phase 3 ☐ |
+|---|---|---|---|---|
 
-*The workspace, the Rust constitution, the design system, and the CI
-gates are sealed. Authentication, RBAC, audit, and the database stand
-open; forensic evidence and electronic signatures wait behind legal
+*The workspace, the Rust constitution, the design system, and the CI gates
+are sealed — and so is the M1 trust layer: local accounts, RBAC
+enforcement, the append-only audit chain, and the TLS-required read-only
+HOSxP connector. Case intake, the patient link, and the deadline rail
+stand open; forensic evidence and electronic signatures wait behind legal
 sign-off.*
 
 > Built with Tauri 2 + Leptos 0.8, served by an axum API, decided by
@@ -84,8 +86,9 @@ default, and the audit trail only ever grows.
   windows and urgency, and the role matrix. Every rule is tested without a
   database, a server, or a clock.
 - **Serves** - `server` is the only writer of OSCC data and the only
-  component allowed to read HOSxP. It ships a health endpoint today;
-  authentication, RBAC, audit, and PostgreSQL arrive in M1.
+  component allowed to read HOSxP. It owns Argon2id accounts, opaque
+  hashed sessions, the append-only audit chain, and RBAC enforcement;
+  case routes arrive in M2.
 - **Asks** - `app` is the Leptos workbench: top bar with role and
   connection state, nav rail with non-identifying queue counts, and the
   deadline rail - the only element allowed to shout.
@@ -137,7 +140,7 @@ Nothing is silently back-dated.
 **Where this artifact is heading**
 
 ```
-Phase 1 ▸ internal paperless: intake, registry, RBAC, audit, timers      ▸ M0 sealed, M1-M5 open
+Phase 1 ▸ internal paperless: intake, registry, RBAC, audit, timers      ▸ M0-M1 sealed, M2-M5 open
 Phase 2 ▸ forensic evidence + chain of custody, document generation      ▸ ahead
 Phase 3 ▸ e-signature + external documents (DPO/legal gates)             ▸ ahead
 ```

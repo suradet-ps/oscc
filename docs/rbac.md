@@ -21,6 +21,10 @@ Permissions are necessary but not sufficient: the server additionally checks
 the case assignment. A role only ever opens cases the user is assigned to,
 unless break-glass is taken.
 
+Enforced in code as of M1: `AuthUser::require` (`server/src/auth/guard.rs`)
+adapts this matrix to the API, and its unit tests pin the Admin-without-
+case-access and reveal/close boundaries.
+
 ## Reason-required actions
 
 `RevealIdentity`, `ExportAggregate`, and `OpenBreakGlass` require a recorded
@@ -36,7 +40,7 @@ re-masks automatically after 60 seconds, on navigation, and on lock.
 - Aftermath: every break-glass entry is surfaced to the OSCC lead for
   review. Review tracking arrives with the audit module in M1.
 
-## Sign-off required before M1
+## Sign-off required before M2
 
 - Confirm the ER nurse may break-glass, or restrict it to the OSCC lead.
 - Confirm who may close a case (currently forensic physician + OSCC lead).

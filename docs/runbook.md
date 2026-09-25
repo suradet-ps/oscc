@@ -47,6 +47,34 @@ Desktop shell (starts trunk, then the Tauri window):
 cargo run -p oscc-tauri
 ```
 
+## Storage and the first account (M1)
+
+The API reads `OSCC_DATABASE_URL` (PostgreSQL) and applies migrations on
+start; without the variable it runs with the database reported absent.
+
+```
+createdb oscc
+OSCC_DATABASE_URL=postgres://oscc_app:***@127.0.0.1:5432/oscc cargo run -p oscc-server
+```
+
+Seed the first account on a trusted machine (the password arrives on
+stdin, never in argv or shell history):
+
+```
+printf '%s' 'the-password' | cargo run -p oscc-server --example hash_password
+psql "$OSCC_DATABASE_URL" -c "INSERT INTO users (username, display_name, role, password_hash) \
+  VALUES ('nurse.a', 'พยาบาล ก', 'er_nurse', '<hash>');"
+```
+
+Roles: `er_nurse`, `forensic_physician`, `social_worker`, `psychologist`,
+`oscc_lead`, `admin` (matrix in docs/rbac.md).
+
+Database-backed tests run only when pointed at a disposable database:
+
+```
+OSCC_TEST_DATABASE_URL=postgres://oscc_app:***@127.0.0.1:5432/oscc_test cargo test -p oscc-server
+```
+
 ## Constitution maintenance
 
 `AGENTS-RUST.md` is tool-managed: upgrade with

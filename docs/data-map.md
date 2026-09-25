@@ -17,6 +17,8 @@
 | `CaseTask.kind`, `due_at`, `state` | `oscc-models` | Sensitive (health) | `case_tasks.*` | Case roles | Completions/waivers audited |
 | Audit actor (name, role) | server-side | PII (staff) | `audit_entries.actor_*` | OSCC lead; own entries for staff | Append-only |
 | Break-glass reason | server-side | Sensitive | `audit_entries.reason` | OSCC lead | Append-only |
+| Password hash | server-side | Credential secret | `users.password_hash` (Argon2id PHC) | Never displayed, never logged | Account changes to be audited in M2 |
+| Session token hash | server-side | Credential secret | `sessions.token_hash` (SHA-256 of the token) | Never displayed, never logged | Login/logout audited |
 
 ## Rules
 
@@ -29,6 +31,9 @@
    record never silently follows later HOSxP changes.
 4. Screenshots, demos, and tests use synthetic data only (AGENTS.md §2
    rule 6).
+5. Raw session tokens exist only in the login response and the client's
+   memory; the database stores SHA-256 hashes, so a dump cannot be replayed
+   as a login.
 
 ## To fill in M1 (before storage exists)
 

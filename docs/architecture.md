@@ -45,6 +45,16 @@
    binding to the LAN is an explicit deployment choice (`OSCC_BIND`).
 8. **Deadline policy lives in `oscc-core`.** Windows and warning leads are
    pure functions with tests; the UI only renders what they return.
+9. **Local accounts first (M1).** Argon2id password hashes; opaque 256-bit
+   session tokens stored only as SHA-256; 8 h absolute and 30 min idle
+   limits. The client keeps the token in memory only — on shared PCs,
+   closing the app signs the operator out. AD/LDAP remains open decision 1.
+10. **Storage is optional at startup.** Without `OSCC_DATABASE_URL` the API
+    still runs, the health probe reports `database: false`, and auth answers
+    `503` instead of pretending. Migrations run automatically on start.
+11. **CORS is an allow-list.** Only the Tauri webview origin and the trunk
+    dev server may call the API; credentials are never allowed (tokens
+    travel in the `Authorization` header).
 
 ## Phases
 
@@ -58,7 +68,7 @@
 
 | # | Decision | Current stance | Needed by |
 |---|---|---|---|
-| 1 | Server host edition + AD/LDAP login | Windows host accepted; AD availability unknown; local accounts meanwhile | M1 |
+| 1 | Server host edition + AD/LDAP login | Local accounts are the M1 baseline; AD availability still unknown | M2 |
 | 2 | Server location + backup owner | Dedicated PC or hospital VM; owner unknown | M5 |
 | 3 | Retention + legal hold | Not yet defined; nothing is deleted in Phase 1 | M5 (DPO) |
 | 4 | Who may unmask; break-glass recipients | Provisional matrix in `docs/rbac.md` | M1 |

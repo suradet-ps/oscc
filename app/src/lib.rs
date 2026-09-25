@@ -1,10 +1,20 @@
 //! OSCC desktop client (Leptos 0.8, CSR).
 //!
-//! M0 ships the workbench shell: top bar, nav rail, and an empty case
-//! queue. Case data, RBAC, and the deadline rail arrive in M1-M3
-//! (AGENTS.md §7). No PII is ever rendered by a placeholder.
+//! M1: sign-in, session countdown, and lock. Case data, RBAC-driven views,
+//! and the deadline rail arrive in M2-M3 (AGENTS.md §7). No PII is ever
+//! rendered by a placeholder.
+
+pub mod api;
+pub mod components;
+pub mod session;
+
+use std::time::Duration;
 
 use leptos::prelude::*;
+
+use components::lock_screen::LockScreen;
+use components::login::LoginScreen;
+use session::{Session, SessionState, role_label};
 
 /// Mounts the app into the document body.
 pub fn run() {
@@ -12,25 +22,40 @@ pub fn run() {
     leptos::mount::mount_to_body(App);
 }
 
-/// Three-region workbench shell (DESIGN.md "Workbench structure").
+/// Session-aware shell: login, lock screen, or the workbench.
 #[component]
 fn App() -> impl IntoView {
+    let state = SessionState::new();
+
+    // One-second ticker: refreshes the countdown and locks on expiry. One
+    // interval for the app's lifetime; the handle is deliberately not kept.
+    Effect::new(move |_| {
+        let _ = set_interval_with_handle(move || state.tick(), Duration::from_secs(1));
+    });
+
     view! {
         <div class="app">
-            <TopBar />
-            <div class="app__body">
-                <NavRail />
-                <main class="workspace">
-                    <EmptyState />
-                </main>
-            </div>
+            {move || match state.session.get() {
+                None => view! { <LoginScreen state=state /> }.into_any(),
+                Some(session) => {
+                    if state.locked.get() {
+                        view! { <LockScreen state=state session=session /> }.into_any()
+                    } else {
+                        view! { <Workbench state=state session=session /> }.into_any()
+                    }
+                }
+            }}
         </div>
     }
 }
 
-/// Top bar: app identity and the connection state (DESIGN.md "Top Bar").
+/// The three-region workbench shell (DESIGN.md "Workbench structure").
 #[component]
-fn TopBar() -> impl IntoView {
+fn Workbench(state: SessionState, session: Session) -> impl IntoView {
+    let display_name = session.user.display_name.clone();
+    let role = role_label(&session.user.role);
+    let remaining = state.remaining_secs;
+
     view! {
         <header class="top-bar">
             <div class="top-bar__brand">
@@ -38,10 +63,19 @@ fn TopBar() -> impl IntoView {
                 <span class="top-bar__subtitle">"ศูนย์พึ่งได้"</span>
             </div>
             <div class="top-bar__status">
-                <span class="status-dot status-dot--disconnected" aria-hidden="true"></span>
-                <span>"ยังไม่ได้เชื่อมต่อเซิร์ฟเวอร์"</span>
+                <span class="top-bar__user">{display_name} " · " {role}</span>
+                <span class="top-bar__timer">{move || format_remaining(remaining.get())}</span>
+                <button class="button-secondary" on:click=move |_| state.lock()>
+                    "ล็อก"
+                </button>
             </div>
         </header>
+        <div class="app__body">
+            <NavRail />
+            <main class="workspace">
+                <EmptyState />
+            </main>
+        </div>
     }
 }
 
@@ -75,8 +109,21 @@ fn EmptyState() -> impl IntoView {
         <div class="empty-state">
             <p class="empty-state__title">"ยังไม่มีเคสในคิว"</p>
             <p class="empty-state__hint">
-                "ระบบจะแสดงเคสตามกำหนดเวลาเมื่อเชื่อมต่อเซิร์ฟเวอร์สำเร็จ"
+                "ระบบจะแสดงเคสตามกำหนดเวลาเมื่อมีข้อมูลเคสในระบบ"
             </p>
         </div>
+    }
+}
+
+/// `h:mm:ss` (or `mm:ss` under an hour) for the session countdown.
+fn format_remaining(secs: i64) -> String {
+    let secs = secs.max(0);
+    let hours = secs / 3600;
+    let minutes = (secs % 3600) / 60;
+    let seconds = secs % 60;
+    if hours > 0 {
+        format!("{hours}:{minutes:02}:{seconds:02}")
+    } else {
+        format!("{minutes:02}:{seconds:02}")
     }
 }

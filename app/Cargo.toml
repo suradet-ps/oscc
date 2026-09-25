@@ -18,5 +18,8 @@ name = "oscc-app"
 path = "src/main.rs"
 
 [dependencies]
+chrono = { version = "0.4", default-features = false, features = ["serde", "std", "clock", "wasmbind"] }  # session expiry clock in the browser
 console_error_panic_hook = "0.1"  # readable panics in the browser console during dev
+gloo-net = { version = "0.6", features = ["http", "json"] }  # API calls from the webview
 leptos = { version = "0.8", features = ["csr"] }  # CSR frontend framework
+serde = { version = "1.0", features = ["derive"] }  # API payloads

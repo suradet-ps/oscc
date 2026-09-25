@@ -51,6 +51,29 @@ impl Role {
             Self::Admin => "admin",
         }
     }
+
+    /// Parses a stored machine name back into a role.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use oscc_models::Role;
+    ///
+    /// assert_eq!(Role::parse("oscc_lead"), Some(Role::OsccLead));
+    /// assert_eq!(Role::parse("nope"), None);
+    /// ```
+    pub fn parse(raw: &str) -> Option<Self> {
+        [
+            Self::ErNurse,
+            Self::ForensicPhysician,
+            Self::SocialWorker,
+            Self::Psychologist,
+            Self::OsccLead,
+            Self::Admin,
+        ]
+        .into_iter()
+        .find(|role| role.as_str() == raw)
+    }
 }
 
 #[cfg(test)]
@@ -70,5 +93,20 @@ mod tests {
         assert_eq!(Role::ErNurse.as_str(), "er_nurse");
         assert_eq!(Role::ForensicPhysician.as_str(), "forensic_physician");
         assert_eq!(Role::Admin.as_str(), "admin");
+    }
+
+    #[test]
+    fn role_parse_round_trips_every_role() {
+        for role in [
+            Role::ErNurse,
+            Role::ForensicPhysician,
+            Role::SocialWorker,
+            Role::Psychologist,
+            Role::OsccLead,
+            Role::Admin,
+        ] {
+            assert_eq!(Role::parse(role.as_str()), Some(role));
+        }
+        assert_eq!(Role::parse("nope"), None);
     }
 }

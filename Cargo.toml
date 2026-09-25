@@ -25,9 +25,11 @@ license = "MIT"
 
 [workspace.dependencies]
 anyhow = "1.0"               # rich context propagation in binary crates
+argon2 = "0.5"               # Argon2id password hashing for local accounts
 axum = "0.8"                 # HTTP API for the central server
 chrono = { version = "0.4", default-features = false, features = ["serde", "std"] }  # timestamps for cases and deadlines
 hex = "0.4"                  # hex encoding for audit hashes and tokens
+rand = "0.8"                 # session token material
 secrecy = { version = "0.10", features = ["serde"] }  # secrets: zeroized on drop, Debug-redacted
 serde = { version = "1.0", features = ["derive"] }  # IPC and API payloads
 serde_json = "1.0"           # structured API payloads
@@ -35,5 +37,6 @@ sha2 = "0.10"                # SHA-256 for audit chain and token storage
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "mysql", "postgres", "chrono", "tls-rustls-ring-native-roots", "migrate", "macros"] }  # HOSxP reads (MySQL) and OSCC storage (PostgreSQL)
 thiserror = "2"              # structured errors in library crates
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time", "net"] }  # async runtime
+tower-http = { version = "0.6", features = ["cors"] }  # LAN CORS for the desktop webview
 tracing = "0.1"              # PII-free structured logging
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }  # log wiring

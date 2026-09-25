@@ -17,16 +17,22 @@ const CHAIN_LOCK_ID: i64 = 0x05CC_A0D1;
 pub struct AuditEvent<'a> {
     /// What happened.
     pub action: AuditAction,
-    /// Username of the actor (never a patient identifier).
+    /// Username of the actor (never a patient identifier). For a failed
+    /// sign-in this is the attempted username.
     pub actor: &'a str,
-    /// Role the actor held at the time.
-    pub actor_role: Role,
+    /// Role the actor held, when it is known (a failed sign-in has none).
+    pub actor_role: Option<Role>,
     /// Case the action touched, when it touched one.
     pub case_id: Option<&'a str>,
     /// Reason for reasoned actions (reveal, waiver, break-glass).
     pub reason: Option<&'a str>,
     /// Non-identifying structured detail (counts, flags, ids).
     pub detail: serde_json::Value,
+}
+
+/// The stored actor role; failed sign-ins are recorded as `unknown`.
+pub fn stored_actor_role(event: &AuditEvent<'_>) -> &'static str {
+    event.actor_role.map_or("unknown", |role| role.as_str())
 }
 
 /// Builds the canonical, field-ordered payload that gets hashed.
@@ -38,7 +44,7 @@ pub fn canonical_payload(event: &AuditEvent<'_>) -> String {
         "action={};actor={};role={};case={};reason={};detail={}",
         event.action.as_str(),
         event.actor,
-        event.actor_role.as_str(),
+        event.actor_role.map_or("", |role| role.as_str()),
         event.case_id.unwrap_or(""),
         event.reason.unwrap_or(""),
         serde_json::to_string(&event.detail).unwrap_or_else(|_| "null".to_string()),
@@ -87,7 +93,7 @@ pub async fn append(pool: &PgPool, event: &AuditEvent<'_>) -> Result<String, sql
     )
     .bind(event.action.as_str())
     .bind(event.actor)
-    .bind(event.actor_role.as_str())
+    .bind(stored_actor_role(event))
     .bind(event.case_id)
     .bind(event.reason)
     .bind(&event.detail)
@@ -108,7 +114,7 @@ mod tests {
         AuditEvent {
             action: AuditAction::CaseViewed,
             actor,
-            actor_role: Role::ErNurse,
+            actor_role: Some(Role::ErNurse),
             case_id,
             reason: None,
             detail: serde_json::json!({ "queue": "my_cases" }),
@@ -146,6 +152,17 @@ mod tests {
         assert_ne!(first, entry_hash(Some("deadbeef"), &payload));
         assert_ne!(first, entry_hash(None, "other-payload"));
         assert_eq!(first.len(), 64);
+    }
+
+    #[test]
+    fn failed_sign_in_has_no_role_and_stores_unknown() {
+        let mut e = event("nurse.a", None);
+        e.action = AuditAction::LoginFailed;
+        e.actor_role = None;
+        let payload = canonical_payload(&e);
+        assert!(payload.contains("action=login_failed"));
+        assert!(payload.contains("role=;"));
+        assert_eq!(stored_actor_role(&e), "unknown");
     }
 
     #[test]

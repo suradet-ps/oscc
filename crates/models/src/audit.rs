@@ -29,6 +29,12 @@ pub enum AuditAction {
     CaseClosed,
     /// Aggregate data was exported.
     AggregateExported,
+    /// A local account signed in.
+    LoginSucceeded,
+    /// A sign-in attempt failed.
+    LoginFailed,
+    /// A session was ended by logout or revocation.
+    Logout,
 }
 
 impl AuditAction {
@@ -45,6 +51,9 @@ impl AuditAction {
             Self::BreakGlassOpened => "break_glass_opened",
             Self::CaseClosed => "case_closed",
             Self::AggregateExported => "aggregate_exported",
+            Self::LoginSucceeded => "login_succeeded",
+            Self::LoginFailed => "login_failed",
+            Self::Logout => "logout",
         }
     }
 }

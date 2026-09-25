@@ -3,6 +3,7 @@
 //! (docs/architecture.md open decision 1); local accounts are the Phase 1
 //! baseline.
 
+pub mod guard;
 pub mod password;
 pub mod routes;
 pub mod service;

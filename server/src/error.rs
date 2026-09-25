@@ -20,6 +20,8 @@ pub enum AppError {
     Unavailable(&'static str),
     /// The request itself is malformed.
     BadRequest(&'static str),
+    /// The requested record does not exist.
+    NotFound(&'static str),
     /// Something failed and saying more would leak internals.
     Internal,
 }
@@ -41,6 +43,7 @@ impl AppError {
             ),
             Self::Unavailable(message) => (StatusCode::SERVICE_UNAVAILABLE, "unavailable", message),
             Self::BadRequest(message) => (StatusCode::BAD_REQUEST, "bad_request", message),
+            Self::NotFound(message) => (StatusCode::NOT_FOUND, "not_found", message),
             Self::Internal => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "internal",

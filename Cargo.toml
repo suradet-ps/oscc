@@ -26,6 +26,7 @@ license = "MIT"
 [workspace.dependencies]
 anyhow = "1.0"               # rich context propagation in binary crates
 argon2 = "0.5"               # Argon2id password hashing for local accounts
+async-trait = "0.1"          # dyn-compatible async patient-source trait
 axum = "0.8"                 # HTTP API for the central server
 chrono = { version = "0.4", default-features = false, features = ["serde", "std"] }  # timestamps for cases and deadlines
 hex = "0.4"                  # hex encoding for audit hashes and tokens

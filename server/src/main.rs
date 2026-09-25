@@ -3,11 +3,15 @@
 //! Binds to loopback by default; binding to the LAN is an explicit
 //! deployment decision (`OSCC_BIND`, AGENTS.md §2 rule 7). Storage is
 //! optional at startup: without `OSCC_DATABASE_URL` the server runs and
-//! reports the database as absent.
+//! reports the database as absent. Patient lookup is optional too: without
+//! `OSCC_HOSXP_*` (or when HOSxP is unreachable) the API answers `503` for
+//! the patient-backed endpoints.
 
 use std::net::SocketAddr;
+use std::sync::Arc;
 
 use anyhow::Context;
+use oscc_server::patients::{self, SharedPatientSource};
 use oscc_server::{AppState, app, db};
 use tracing_subscriber::EnvFilter;
 
@@ -27,10 +31,14 @@ async fn main() -> anyhow::Result<()> {
                 .await
                 .context("cannot prepare the OSCC database")?;
             tracing::info!("oscc database ready");
-            AppState::with_pool(pool)
+
+            match patient_source().await {
+                Some(patients) => AppState::with_pool_and_patients(pool, patients),
+                None => AppState::with_pool(pool),
+            }
         }
         None => {
-            tracing::warn!("OSCC_DATABASE_URL is not set: auth endpoints will answer 503");
+            tracing::warn!("OSCC_DATABASE_URL is not set: data endpoints will answer 503");
             AppState::new()
         }
     };
@@ -48,6 +56,30 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("oscc-server stopped with an error")?;
     Ok(())
+}
+
+/// Builds the read-only HOSxP patient source, or `None` when it is not
+/// configured or unreachable — the API then answers `503` for lookups
+/// instead of pretending.
+async fn patient_source() -> Option<SharedPatientSource> {
+    let cfg = match oscc_hosxp_connector::HosxConfig::from_env() {
+        Ok(cfg) => cfg,
+        Err(_) => {
+            tracing::warn!("OSCC_HOSXP_* is not set: patient lookup disabled");
+            return None;
+        }
+    };
+
+    match oscc_hosxp_connector::pool::connect(&cfg).await {
+        Ok(pool) => {
+            tracing::info!("HOSxP read-only pool ready");
+            Some(Arc::new(patients::HosxpPatientSource::new(pool)))
+        }
+        Err(err) => {
+            tracing::warn!(error = %err, "HOSxP unreachable at startup: patient lookup disabled");
+            None
+        }
+    }
 }
 
 /// Installs PII-free structured logging. The default filter is `info`;

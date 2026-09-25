@@ -9,10 +9,12 @@ description = "OSCC central API — the only writer of OSCC data (AGENTS.md §3)
 [dependencies]
 anyhow.workspace = true
 argon2.workspace = true
+async-trait.workspace = true
 axum.workspace = true
 chrono.workspace = true
 hex.workspace = true
 oscc-core = { path = "../crates/oscc-core" }
+oscc-hosxp-connector = { path = "../crates/hosxp-connector" }
 oscc-models = { path = "../crates/models" }
 rand.workspace = true
 secrecy.workspace = true
@@ -20,6 +22,7 @@ serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 sqlx.workspace = true
+thiserror.workspace = true
 tokio.workspace = true
 tower-http.workspace = true
 tracing.workspace = true

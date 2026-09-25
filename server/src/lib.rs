@@ -8,9 +8,12 @@
 
 pub mod audit;
 pub mod auth;
+pub mod cases;
 pub mod db;
 pub mod error;
+pub mod patients;
 
+use std::sync::Arc;
 use std::time::Instant;
 
 use axum::http::{HeaderValue, Method, header};
@@ -20,28 +23,41 @@ use sqlx::PgPool;
 use tower_http::cors::CorsLayer;
 
 pub use error::AppError;
+use patients::SharedPatientSource;
 
 /// Shared state for every route.
 #[derive(Clone)]
 pub struct AppState {
     started_at: Instant,
     pool: Option<PgPool>,
+    patients: Option<SharedPatientSource>,
 }
 
 impl AppState {
-    /// A state without storage: health works, auth answers `503`.
+    /// A state without storage: health works, data endpoints answer `503`.
     pub fn new() -> Self {
         Self {
             started_at: Instant::now(),
             pool: None,
+            patients: None,
         }
     }
 
-    /// A state backed by the OSCC database.
+    /// A state backed by the OSCC database, without a patient source.
     pub fn with_pool(pool: PgPool) -> Self {
         Self {
             started_at: Instant::now(),
             pool: Some(pool),
+            patients: None,
+        }
+    }
+
+    /// A state with both the OSCC database and a patient source.
+    pub fn with_pool_and_patients(pool: PgPool, patients: SharedPatientSource) -> Self {
+        Self {
+            started_at: Instant::now(),
+            pool: Some(pool),
+            patients: Some(patients),
         }
     }
 
@@ -56,6 +72,18 @@ impl AppState {
             .as_ref()
             .ok_or(AppError::Unavailable("database not configured"))
     }
+
+    /// The HOSxP patient source.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`AppError::Unavailable`] when HOSxP is not configured or
+    /// was unreachable at startup.
+    pub fn patients(&self) -> Result<&Arc<dyn patients::PatientSource>, AppError> {
+        self.patients
+            .as_ref()
+            .ok_or(AppError::Unavailable("HOSxP is not configured"))
+    }
 }
 
 impl Default for AppState {
@@ -69,6 +97,7 @@ pub fn app(state: AppState) -> Router {
     Router::new()
         .route("/healthz", get(healthz))
         .nest("/api/v1/auth", auth::routes::routes())
+        .nest("/api/v1/cases", cases::routes::routes())
         .layer(cors_layer())
         .with_state(state)
 }

@@ -8,8 +8,11 @@
 pub mod config;
 pub mod error;
 pub mod pool;
+pub mod queries;
 pub mod readonly_guard;
+pub mod repository;
 
 pub use config::HosxConfig;
 pub use error::Error;
 pub use readonly_guard::{GuardError, PING_SQL, READ_ONLY_SESSION_SQL, assert_read_only};
+pub use repository::{PatientQuery, PatientRow, find_patients};

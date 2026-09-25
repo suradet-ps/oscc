@@ -2493,6 +2493,7 @@ dependencies = [
 name = "oscc-hosxp-connector"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "secrecy",
  "sqlx",
  "thiserror 2.0.21",

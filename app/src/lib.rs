@@ -1,20 +1,25 @@
 //! OSCC desktop client (Leptos 0.8, CSR).
 //!
-//! M1: sign-in, session countdown, and lock. Case data, RBAC-driven views,
-//! and the deadline rail arrive in M2-M3 (AGENTS.md §7). No PII is ever
-//! rendered by a placeholder.
+//! M2: the case queue, intake, and audited reveal on top of the M1 trust
+//! layer. Identity stays masked until someone reveals it with a reason.
 
 pub mod api;
 pub mod components;
+pub mod labels;
 pub mod session;
+pub mod workbench;
 
 use std::time::Duration;
 
 use leptos::prelude::*;
 
+use api::ApiClient;
+use components::case_detail::CaseDetailView;
+use components::case_queue::CaseQueue;
 use components::lock_screen::LockScreen;
 use components::login::LoginScreen;
 use session::{Session, SessionState, role_label};
+use workbench::{QueueFilter, WorkbenchState, count_for};
 
 /// Mounts the app into the document body.
 pub fn run() {
@@ -56,6 +61,14 @@ fn Workbench(state: SessionState, session: Session) -> impl IntoView {
     let role = role_label(&session.user.role);
     let remaining = state.remaining_secs;
 
+    let wb = WorkbenchState::new();
+    let api = ApiClient::new(state.api_base.get(), session.token.clone());
+
+    // Load the queue once when the workbench mounts.
+    Effect::new(move |_| {
+        wb.reload(api.clone());
+    });
+
     view! {
         <header class="top-bar">
             <div class="top-bar__brand">
@@ -71,47 +84,70 @@ fn Workbench(state: SessionState, session: Session) -> impl IntoView {
             </div>
         </header>
         <div class="app__body">
-            <NavRail />
+            <NavRail wb=wb />
             <main class="workspace">
-                <EmptyState />
+                {move || {
+                    if let Some(detail) = wb.selected.get() {
+                        view! {
+                            <CaseDetailView
+                                wb=wb
+                                session_state=state
+                                session=session.clone()
+                                detail=detail
+                            />
+                        }
+                            .into_any()
+                    } else {
+                        view! {
+                            <CaseQueue wb=wb session_state=state session=session.clone() />
+                        }
+                            .into_any()
+                    }
+                }}
             </main>
         </div>
     }
 }
 
-/// Nav rail: case queues and the dashboard (counts are non-identifying).
+/// Nav rail: queues with non-identifying counts.
 #[component]
-fn NavRail() -> impl IntoView {
-    let queues = ["รับแจ้งใหม่", "เคสของฉัน", "ติดตามวันนี้", "ทั้งหมด", "แดชบอร์ด"];
+fn NavRail(wb: WorkbenchState) -> impl IntoView {
     view! {
         <nav class="nav-rail" aria-label="เมนูหลัก">
             <ul class="nav-rail__list">
-                {queues
+                {QueueFilter::ALL
                     .into_iter()
-                    .map(|label| {
+                    .map(|filter| {
+                        let enabled = filter.enabled();
                         view! {
-                            <li class="nav-item">
-                                <span>{label}</span>
-                                <span class="nav-item__count">"0"</span>
+                            <li>
+                                <button
+                                    class="nav-item"
+                                    class=("nav-item--active", move || wb.queue.get() == filter)
+                                    disabled=!enabled
+                                    on:click=move |_| {
+                                        if enabled {
+                                            wb.select_queue(filter);
+                                        }
+                                    }
+                                >
+                                    <span>{filter.label()}</span>
+                                    <span class="nav-item__count">
+                                        {move || {
+                                            if enabled {
+                                                count_for(&wb.cases.get(), filter).to_string()
+                                            } else {
+                                                "—".to_string()
+                                            }
+                                        }}
+                                    </span>
+                                </button>
                             </li>
                         }
                     })
                     .collect_view()}
             </ul>
         </nav>
-    }
-}
-
-/// Empty queue state (DESIGN.md "Empty & Loading States").
-#[component]
-fn EmptyState() -> impl IntoView {
-    view! {
-        <div class="empty-state">
-            <p class="empty-state__title">"ยังไม่มีเคสในคิว"</p>
-            <p class="empty-state__hint">
-                "ระบบจะแสดงเคสตามกำหนดเวลาเมื่อมีข้อมูลเคสในระบบ"
-            </p>
-        </div>
     }
 }
 

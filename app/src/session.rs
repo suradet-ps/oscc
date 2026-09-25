@@ -98,3 +98,17 @@ pub fn role_label(role: &str) -> &'static str {
         _ => "ไม่ทราบบทบาท",
     }
 }
+
+/// Whether the role may reveal identity. Mirrors `oscc-core::rbac`; the
+/// server enforces it regardless, and a `403` is handled as an error.
+pub fn can_reveal(role: &str) -> bool {
+    matches!(role, "forensic_physician" | "social_worker" | "oscc_lead")
+}
+
+/// Whether the role may register cases. Mirrors `oscc-core::rbac`.
+pub fn can_create(role: &str) -> bool {
+    matches!(
+        role,
+        "er_nurse" | "forensic_physician" | "social_worker" | "oscc_lead"
+    )
+}

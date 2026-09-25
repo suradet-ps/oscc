@@ -49,6 +49,9 @@ cargo run -p oscc-tauri
 
 ## Storage and the first account (M1)
 
+Windows step-by-step with the actual commands used (install, role, database,
+migration, seed, verification): [postgresql-setup.md](postgresql-setup.md).
+
 The API reads `OSCC_DATABASE_URL` (PostgreSQL) and applies migrations on
 start; without the variable it runs with the database reported absent.
 

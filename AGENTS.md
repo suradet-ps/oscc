@@ -213,6 +213,8 @@ Planned docs:
 - `DESIGN.md` (repo root) - visual design system: tokens, components, privacy
   and audit UI patterns
 - `docs/architecture.md` - architecture decisions and trade-offs
+- `docs/postgresql-setup.md` - PostgreSQL install/role/database walkthrough with
+  the commands actually used (Windows)
 - `docs/data-map.md` - every PII field, where it lives, who can see it
 - `docs/rbac.md` - role x department x action matrix, break-glass policy
 - `docs/retention.md` - retention and legal hold per case type

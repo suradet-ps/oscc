@@ -84,6 +84,34 @@ pub enum CaseStatus {
     Closed,
 }
 
+impl CaseStatus {
+    /// The stable machine name used by storage and the API.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Intake => "intake",
+            Self::Active => "active",
+            Self::FollowUp => "follow_up",
+            Self::Closed => "closed",
+        }
+    }
+
+    /// Parses a stored machine name back into a status.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use oscc_models::CaseStatus;
+    ///
+    /// assert_eq!(CaseStatus::parse("follow_up"), Some(CaseStatus::FollowUp));
+    /// assert_eq!(CaseStatus::parse("nope"), None);
+    /// ```
+    pub fn parse(raw: &str) -> Option<Self> {
+        [Self::Intake, Self::Active, Self::FollowUp, Self::Closed]
+            .into_iter()
+            .find(|value| value.as_str() == raw)
+    }
+}
+
 /// Provisional Phase 1 incident taxonomy.
 ///
 /// The final taxonomy must follow the OSCC intake forms and indicator set
@@ -105,6 +133,34 @@ pub enum IncidentType {
     Other,
 }
 
+impl IncidentType {
+    /// The stable machine name used by storage and the API.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::SexualAssault => "sexual_assault",
+            Self::DomesticViolence => "domestic_violence",
+            Self::ChildAbuse => "child_abuse",
+            Self::PhysicalAssault => "physical_assault",
+            Self::Trafficking => "trafficking",
+            Self::Other => "other",
+        }
+    }
+
+    /// Parses a stored machine name back into an incident type.
+    pub fn parse(raw: &str) -> Option<Self> {
+        [
+            Self::SexualAssault,
+            Self::DomesticViolence,
+            Self::ChildAbuse,
+            Self::PhysicalAssault,
+            Self::Trafficking,
+            Self::Other,
+        ]
+        .into_iter()
+        .find(|value| value.as_str() == raw)
+    }
+}
+
 /// How quickly the case must be acted on; drives timers and alerting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -117,6 +173,25 @@ pub enum RiskLevel {
     High,
     /// Immediate danger; escalate now.
     Critical,
+}
+
+impl RiskLevel {
+    /// The stable machine name used by storage and the API.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Low => "low",
+            Self::Medium => "medium",
+            Self::High => "high",
+            Self::Critical => "critical",
+        }
+    }
+
+    /// Parses a stored machine name back into a risk level.
+    pub fn parse(raw: &str) -> Option<Self> {
+        [Self::Low, Self::Medium, Self::High, Self::Critical]
+            .into_iter()
+            .find(|value| value.as_str() == raw)
+    }
 }
 
 /// A Phase 1 case record without patient identity.
@@ -167,5 +242,46 @@ mod tests {
         let id = CaseId::parse("OSCC-2026-0042").expect("valid case id");
         let json = serde_json::to_string(&id).expect("serialize");
         assert_eq!(json, "\"OSCC-2026-0042\"");
+    }
+
+    #[test]
+    fn case_status_round_trips_via_machine_names() {
+        for status in [
+            CaseStatus::Intake,
+            CaseStatus::Active,
+            CaseStatus::FollowUp,
+            CaseStatus::Closed,
+        ] {
+            assert_eq!(CaseStatus::parse(status.as_str()), Some(status));
+        }
+        assert_eq!(CaseStatus::parse("nope"), None);
+    }
+
+    #[test]
+    fn incident_type_round_trips_via_machine_names() {
+        for kind in [
+            IncidentType::SexualAssault,
+            IncidentType::DomesticViolence,
+            IncidentType::ChildAbuse,
+            IncidentType::PhysicalAssault,
+            IncidentType::Trafficking,
+            IncidentType::Other,
+        ] {
+            assert_eq!(IncidentType::parse(kind.as_str()), Some(kind));
+        }
+        assert_eq!(IncidentType::parse("nope"), None);
+    }
+
+    #[test]
+    fn risk_level_round_trips_via_machine_names() {
+        for level in [
+            RiskLevel::Low,
+            RiskLevel::Medium,
+            RiskLevel::High,
+            RiskLevel::Critical,
+        ] {
+            assert_eq!(RiskLevel::parse(level.as_str()), Some(level));
+        }
+        assert_eq!(RiskLevel::parse("nope"), None);
     }
 }

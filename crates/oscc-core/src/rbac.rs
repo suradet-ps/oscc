@@ -11,6 +11,8 @@ use oscc_models::Role;
 /// A capability a role may hold.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Permission {
+    /// Register a new case at intake.
+    CreateCase,
     /// Open a case the user is assigned to.
     ViewCase,
     /// Unmask patient identity through the reveal dialog.
@@ -30,6 +32,7 @@ pub enum Permission {
 }
 
 const ER_NURSE: &[Permission] = &[
+    Permission::CreateCase,
     Permission::ViewCase,
     Permission::UpdateCase,
     Permission::CompleteTask,
@@ -38,6 +41,7 @@ const ER_NURSE: &[Permission] = &[
 ];
 
 const FORENSIC_PHYSICIAN: &[Permission] = &[
+    Permission::CreateCase,
     Permission::ViewCase,
     Permission::RevealIdentity,
     Permission::UpdateCase,
@@ -47,6 +51,7 @@ const FORENSIC_PHYSICIAN: &[Permission] = &[
 ];
 
 const SOCIAL_WORKER: &[Permission] = &[
+    Permission::CreateCase,
     Permission::ViewCase,
     Permission::RevealIdentity,
     Permission::UpdateCase,
@@ -62,6 +67,7 @@ const PSYCHOLOGIST: &[Permission] = &[
 ];
 
 const OSCC_LEAD: &[Permission] = &[
+    Permission::CreateCase,
     Permission::ViewCase,
     Permission::RevealIdentity,
     Permission::UpdateCase,
@@ -127,6 +133,27 @@ mod tests {
         assert!(!allows(Role::Admin, Permission::ViewCase));
         assert!(!allows(Role::Admin, Permission::RevealIdentity));
         assert!(allows(Role::Admin, Permission::ViewDashboard));
+    }
+
+    #[test]
+    fn create_case_is_for_registrars_only() {
+        for role in [
+            Role::ErNurse,
+            Role::ForensicPhysician,
+            Role::SocialWorker,
+            Role::OsccLead,
+        ] {
+            assert!(
+                allows(role, Permission::CreateCase),
+                "{role:?} should create cases"
+            );
+        }
+        for role in [Role::Psychologist, Role::Admin] {
+            assert!(
+                !allows(role, Permission::CreateCase),
+                "{role:?} must not create cases"
+            );
+        }
     }
 
     #[test]

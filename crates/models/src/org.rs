@@ -20,6 +20,34 @@ pub enum Department {
     It,
 }
 
+impl Department {
+    /// The stable machine name used by storage and the API.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Emergency => "emergency",
+            Self::Forensic => "forensic",
+            Self::SocialWork => "social_work",
+            Self::Psychology => "psychology",
+            Self::Oscc => "oscc",
+            Self::It => "it",
+        }
+    }
+
+    /// Parses a stored machine name back into a department.
+    pub fn parse(raw: &str) -> Option<Self> {
+        [
+            Self::Emergency,
+            Self::Forensic,
+            Self::SocialWork,
+            Self::Psychology,
+            Self::Oscc,
+            Self::It,
+        ]
+        .into_iter()
+        .find(|value| value.as_str() == raw)
+    }
+}
+
 /// A signed-in user's role. The permission matrix lives in
 /// `oscc-core::rbac` and is provisionally documented in `docs/rbac.md`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -108,5 +136,20 @@ mod tests {
             assert_eq!(Role::parse(role.as_str()), Some(role));
         }
         assert_eq!(Role::parse("nope"), None);
+    }
+
+    #[test]
+    fn department_round_trips_via_machine_names() {
+        for department in [
+            Department::Emergency,
+            Department::Forensic,
+            Department::SocialWork,
+            Department::Psychology,
+            Department::Oscc,
+            Department::It,
+        ] {
+            assert_eq!(Department::parse(department.as_str()), Some(department));
+        }
+        assert_eq!(Department::parse("nope"), None);
     }
 }

@@ -98,6 +98,7 @@ pub fn app(state: AppState) -> Router {
         .route("/healthz", get(healthz))
         .nest("/api/v1/auth", auth::routes::routes())
         .nest("/api/v1/cases", cases::routes::routes())
+        .nest("/api/v1/patients", patients::routes::routes())
         .layer(cors_layer())
         .with_state(state)
 }

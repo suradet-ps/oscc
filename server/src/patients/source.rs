@@ -54,3 +54,22 @@ impl PatientSource for HosxpPatientSource {
 
 /// A shared patient source, stored in the API state.
 pub type SharedPatientSource = Arc<dyn PatientSource>;
+
+/// Development-only source with one canned patient, enabled with
+/// `OSCC_PATIENT_SOURCE=fake` on machines without HOSxP. It exists so the
+/// intake flow can be exercised locally; it must never be enabled in a real
+/// deployment (AGENTS.md §2 rule 6: synthetic data only outside production).
+pub struct FakeDevSource;
+
+#[async_trait]
+impl PatientSource for FakeDevSource {
+    async fn find(&self, _query: PatientQuery) -> Result<Vec<PatientRow>, PatientSourceError> {
+        Ok(vec![PatientRow {
+            hn: "12345".to_string(),
+            cid: Some("1101701234567".to_string()),
+            full_name_th: "ผู้ป่วย ทดสอบ".to_string(),
+            birth_date: None,
+            sex: Some("ชาย".to_string()),
+        }])
+    }
+}

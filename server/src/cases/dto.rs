@@ -60,6 +60,26 @@ pub struct MaskedPatient {
     pub snapshot_at: DateTime<Utc>,
 }
 
+/// Reveal payload: the reason is mandatory and recorded in the audit trail.
+#[derive(Debug, Deserialize)]
+pub struct RevealRequest {
+    /// Why the identity is being revealed.
+    pub reason: String,
+}
+
+/// Full identity, returned only by the audited reveal path.
+#[derive(Debug, Serialize)]
+pub struct RevealedPatient {
+    /// Hospital number snapshot.
+    pub hn: String,
+    /// National ID snapshot.
+    pub cid: String,
+    /// Name snapshot.
+    pub name: String,
+    /// When the snapshot was taken.
+    pub snapshot_at: DateTime<Utc>,
+}
+
 /// Intake payload. Exactly one of `hn`/`cid` selects the patient.
 #[derive(Debug, Deserialize)]
 pub struct CreateCaseRequest {

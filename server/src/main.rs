@@ -58,10 +58,18 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Builds the read-only HOSxP patient source, or `None` when it is not
-/// configured or unreachable — the API then answers `503` for lookups
+/// Builds the patient source: a development fake when explicitly requested,
+/// otherwise the read-only HOSxP connector. Returns `None` when HOSxP is
+/// not configured or unreachable — the API then answers `503` for lookups
 /// instead of pretending.
 async fn patient_source() -> Option<SharedPatientSource> {
+    if std::env::var("OSCC_PATIENT_SOURCE").as_deref() == Ok("fake") {
+        tracing::warn!(
+            "OSCC_PATIENT_SOURCE=fake: using the development patient source — never do this in a real deployment"
+        );
+        return Some(Arc::new(patients::FakeDevSource));
+    }
+
     let cfg = match oscc_hosxp_connector::HosxConfig::from_env() {
         Ok(cfg) => cfg,
         Err(_) => {

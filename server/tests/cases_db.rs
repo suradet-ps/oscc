@@ -55,12 +55,12 @@ async fn intake_list_and_detail_round_trip_when_database_available()
     oscc_server::db::migrate(&pool).await?;
 
     let unique = SystemTime::now().duration_since(UNIX_EPOCH)?.as_nanos();
-    let username = format!("test-nurse-{unique}");
+    let username = format!("test-doctor-{unique}");
     let password_hash = oscc_server::auth::password::hash_password("test-password")
         .map_err(|err| format!("hash failed: {err}"))?;
     let user_id: i64 = sqlx::query_scalar(
         "INSERT INTO users (username, display_name, role, password_hash) \
-         VALUES ($1, 'Test Nurse', 'er_nurse', $2) RETURNING id",
+         VALUES ($1, 'Test Doctor', 'forensic_physician', $2) RETURNING id",
     )
     .bind(&username)
     .bind(&password_hash)
@@ -172,13 +172,84 @@ async fn intake_list_and_detail_round_trip_when_database_available()
         .await?;
     assert_eq!(missing.status(), StatusCode::NOT_FOUND);
 
-    // Both actions are on the audit chain.
+    // Reveal without a reason is rejected.
+    let no_reason = router
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri(format!("/api/v1/cases/{case_id}/reveal"))
+                .header("authorization", format!("Bearer {token}"))
+                .header("content-type", "application/json")
+                .body(Body::from(
+                    serde_json::json!({ "reason": "   " }).to_string(),
+                ))?,
+        )
+        .await?;
+    assert_eq!(no_reason.status(), StatusCode::BAD_REQUEST);
+
+    // Reveal with a reason returns the full snapshot.
+    let reveal = router
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri(format!("/api/v1/cases/{case_id}/reveal"))
+                .header("authorization", format!("Bearer {token}"))
+                .header("content-type", "application/json")
+                .body(Body::from(
+                    serde_json::json!({ "reason": "ตรวจรักษาต่อเนื่อง" }).to_string(),
+                ))?,
+        )
+        .await?;
+    assert_eq!(reveal.status(), StatusCode::OK);
+    let revealed = json_of(reveal).await?;
+    assert_eq!(revealed["hn"], "12345");
+    assert_eq!(revealed["cid"], "1101701234567");
+    assert_eq!(revealed["name"], "สมชาย ทดสอบ");
+
+    // Patient lookup returns masked candidates only.
+    let lookup = router
+        .clone()
+        .oneshot(
+            Request::builder()
+                .uri("/api/v1/patients/lookup?hn=12345")
+                .header("authorization", format!("Bearer {token}"))
+                .body(Body::empty())?,
+        )
+        .await?;
+    assert_eq!(lookup.status(), StatusCode::OK);
+    let candidates = json_of(lookup).await?;
+    assert_eq!(candidates.as_array().map(Vec::len), Some(1));
+    assert_eq!(candidates[0]["hn"], "12****45");
+    assert_eq!(candidates[0]["cid"], "1-XXXX-XXXXX-XX-7");
+
+    // Case actions are on the audit chain, in order, with the reveal reason.
     let actions: Vec<String> =
         sqlx::query_scalar("SELECT action FROM audit_entries WHERE case_id = $1 ORDER BY id")
             .bind(&case_id)
             .fetch_all(&pool)
             .await?;
-    assert_eq!(actions, vec!["case_opened", "case_viewed"]);
+    assert_eq!(
+        actions,
+        vec!["case_opened", "case_viewed", "identity_revealed"]
+    );
+    let reason: Option<String> = sqlx::query_scalar(
+        "SELECT reason FROM audit_entries WHERE action = 'identity_revealed' AND case_id = $1",
+    )
+    .bind(&case_id)
+    .fetch_one(&pool)
+    .await?;
+    assert_eq!(reason.as_deref(), Some("ตรวจรักษาต่อเนื่อง"));
+
+    // The lookup is audited with the query kind, never the search value.
+    let lookups: i64 = sqlx::query_scalar(
+        "SELECT count(*) FROM audit_entries WHERE action = 'patient_looked_up' AND actor = $1",
+    )
+    .bind(&username)
+    .fetch_one(&pool)
+    .await?;
+    assert_eq!(lookups, 1);
 
     sqlx::query(
         "DELETE FROM patient_links WHERE case_pk = (SELECT id FROM cases WHERE case_id = $1)",

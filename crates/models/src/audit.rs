@@ -35,6 +35,8 @@ pub enum AuditAction {
     LoginFailed,
     /// A session was ended by logout or revocation.
     Logout,
+    /// HOSxP was queried for patient demographics (masked results).
+    PatientLookedUp,
 }
 
 impl AuditAction {
@@ -54,6 +56,7 @@ impl AuditAction {
             Self::LoginSucceeded => "login_succeeded",
             Self::LoginFailed => "login_failed",
             Self::Logout => "logout",
+            Self::PatientLookedUp => "patient_looked_up",
         }
     }
 }

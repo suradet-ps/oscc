@@ -15,19 +15,22 @@ use oscc_core::Permission;
 use oscc_models::{AuditAction, Cid, Hn};
 use serde::Deserialize;
 
-use super::dto::{CaseDetail, CaseSummary, CreateCaseRequest, PatientKey};
+use super::dto::{
+    CaseDetail, CaseSummary, CreateCaseRequest, PatientKey, RevealRequest, RevealedPatient,
+};
 use super::store::{self, NewCase};
 use crate::AppState;
 use crate::audit::{self, AuditEvent};
 use crate::auth::AuthUser;
 use crate::error::AppError;
-use crate::patients::PatientSourceError;
+use crate::patients::error_to_app;
 
 /// Builds the case router (mounted under `/api/v1/cases`).
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", post(create_case).get(list_cases))
         .route("/{case_id}", get(get_case))
+        .route("/{case_id}/reveal", post(reveal_identity))
 }
 
 /// Registers a case for a patient found in HOSxP, snapshotting the
@@ -45,7 +48,7 @@ async fn create_case(
         .patients()?
         .find(key.to_query())
         .await
-        .map_err(patient_source_error)?;
+        .map_err(error_to_app)?;
     let row = rows
         .into_iter()
         .next()
@@ -155,6 +158,54 @@ async fn get_case(
     Ok(Json(row.detail()?))
 }
 
+/// Reveals the full patient identity for a case, with a mandatory reason.
+///
+/// This is the only path that returns unmasked identity; the reason and the
+/// actor are recorded on the audit chain before the response leaves.
+async fn reveal_identity(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Path(case_id): Path<String>,
+    Json(request): Json<RevealRequest>,
+) -> Result<Json<RevealedPatient>, AppError> {
+    user.require(Permission::RevealIdentity)?;
+
+    let reason = request.reason.trim();
+    if reason.is_empty() {
+        return Err(AppError::BadRequest(
+            "a reason is required to reveal identity",
+        ));
+    }
+    if reason.chars().count() > 200 {
+        return Err(AppError::BadRequest("reason is too long"));
+    }
+
+    let pool = state.pool()?;
+    let row = store::find_case(pool, &case_id)
+        .await?
+        .ok_or(AppError::NotFound("case not found"))?;
+
+    audit::append(
+        pool,
+        &AuditEvent {
+            action: AuditAction::IdentityRevealed,
+            actor: &user.username,
+            actor_role: Some(user.role),
+            case_id: Some(&row.case_id),
+            reason: Some(reason),
+            detail: serde_json::json!({}),
+        },
+    )
+    .await?;
+
+    Ok(Json(RevealedPatient {
+        hn: row.hn.clone(),
+        cid: row.cid.clone(),
+        name: row.name_snapshot.clone(),
+        snapshot_at: row.snapshot_at,
+    }))
+}
+
 impl PatientKey {
     /// The connector query for this key.
     pub fn to_query(&self) -> oscc_hosxp_connector::PatientQuery {
@@ -162,13 +213,5 @@ impl PatientKey {
             Self::Hn(hn) => oscc_hosxp_connector::PatientQuery::Hn(hn.clone()),
             Self::Cid(cid) => oscc_hosxp_connector::PatientQuery::Cid(cid.clone()),
         }
-    }
-}
-
-/// Maps a lookup failure to the API error surface.
-fn patient_source_error(err: PatientSourceError) -> AppError {
-    match err {
-        PatientSourceError::Unavailable => AppError::Unavailable("HOSxP is not reachable"),
-        PatientSourceError::Invalid => AppError::BadRequest("patient query is invalid"),
     }
 }

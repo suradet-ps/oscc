@@ -1,0 +1,12 @@
+[package]
+name = "oscc-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "OSCC pure logic — case lifecycle, deadline rules, access decisions; no I/O"
+
+[dependencies]
+chrono.workspace = true
+thiserror.workspace = true
+oscc-models = { path = "../models" }

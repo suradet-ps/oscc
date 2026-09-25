@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"Minimal capabilities for the main window — no fs/shell scopes (AGENTS.md §2 rule 10)","local":true,"windows":["main"],"permissions":["core:default"]}}

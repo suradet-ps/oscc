@@ -1,0 +1,18 @@
+[package]
+name = "oscc-tauri"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Tauri 2 shell for OSCC — thin IPC adapters only, no business logic, no SQL"
+
+[lib]
+name = "oscc_tauri_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+serde.workspace = true
+tauri = { version = "2", features = [] }

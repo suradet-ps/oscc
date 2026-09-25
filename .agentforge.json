@@ -1,0 +1,385 @@
+{
+  "manifest_version": 1,
+  "ruleset_version": "0.1.0",
+  "generated_at": "2026-01-01T00:00:00Z",
+  "rule_count": 47,
+  "rules": [
+    {
+      "id": "0",
+      "section": "0",
+      "title": "Golden Rules (Always Apply)",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "cbee4365a8f8fa58"
+    },
+    {
+      "id": "1.1",
+      "section": "1",
+      "title": "Think Before Acting",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "076cc2a101148a82"
+    },
+    {
+      "id": "1.2",
+      "section": "1",
+      "title": "Simplicity First",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "d0357aeba25b1590"
+    },
+    {
+      "id": "1.3",
+      "section": "1",
+      "title": "Surgical Changes",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "a3c9350611d0bf1c"
+    },
+    {
+      "id": "1.4",
+      "section": "1",
+      "title": "Goal-Driven Execution",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "971b881a8dde36b1"
+    },
+    {
+      "id": "2",
+      "section": "2",
+      "title": "User Interaction Protocol",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "0271d79bca497286"
+    },
+    {
+      "id": "3",
+      "section": "3",
+      "title": "Mandatory Checks Before Claiming Completion",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "dc41ec7099e59fe1"
+    },
+    {
+      "id": "4.1",
+      "section": "4",
+      "title": "Cargo.toml",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "f9ae4fe2be1ac115"
+    },
+    {
+      "id": "4.2",
+      "section": "4",
+      "title": "Workspace Projects",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "6942070817a036f8"
+    },
+    {
+      "id": "5.1",
+      "section": "5",
+      "title": "Ownership & Borrowing",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "03d94a9938411767"
+    },
+    {
+      "id": "5.2",
+      "section": "5",
+      "title": "Error Handling",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "fc13c6a2a1eeb778"
+    },
+    {
+      "id": "5.3",
+      "section": "5",
+      "title": "Type Design",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "fe0505060b45e5dc"
+    },
+    {
+      "id": "5.4",
+      "section": "5",
+      "title": "Unsafe Code",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "34ea8e81b0acd627"
+    },
+    {
+      "id": "5.5",
+      "section": "5",
+      "title": "Panics",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "dfff74ea501318fa"
+    },
+    {
+      "id": "5.6",
+      "section": "5",
+      "title": "Performance Awareness",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "5e2fbfc3a75c6a1f"
+    },
+    {
+      "id": "6",
+      "section": "6",
+      "title": "Module & Visibility",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "264683a6508b9e38"
+    },
+    {
+      "id": "7",
+      "section": "7",
+      "title": "Async Code (when applicable)",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "27b92b6d57ad5a9b"
+    },
+    {
+      "id": "8.1",
+      "section": "8",
+      "title": "Unit Tests",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "695de91a8842d2cc"
+    },
+    {
+      "id": "8.2",
+      "section": "8",
+      "title": "Integration Tests",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "525ecddb8e944a6c"
+    },
+    {
+      "id": "8.3",
+      "section": "8",
+      "title": "Async Tests",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "87735a29e4e148fa"
+    },
+    {
+      "id": "8.4",
+      "section": "8",
+      "title": "Test Hygiene",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "f8faef48c1cb2192"
+    },
+    {
+      "id": "9",
+      "section": "9",
+      "title": "Documentation Standards",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "0e6040276f913039"
+    },
+    {
+      "id": "10",
+      "section": "10",
+      "title": "Security Checklist",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "5357eedd87408303"
+    },
+    {
+      "id": "11",
+      "section": "11",
+      "title": "CI / Release Checklist",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "e35e70b617a8d1af"
+    },
+    {
+      "id": "12",
+      "section": "12",
+      "title": "Refactoring Workflow",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "e47636082b7b804b"
+    },
+    {
+      "id": "13",
+      "section": "13",
+      "title": "Common Anti-Patterns (Never Do)",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "f1a0a2f262c84538"
+    },
+    {
+      "id": "14",
+      "section": "14",
+      "title": "Project Overrides",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "d5140866add1462a"
+    },
+    {
+      "id": "TAURI-1.1",
+      "section": "TAURI-1",
+      "title": "Core / Shell Separation",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "8917184ab2541c88"
+    },
+    {
+      "id": "TAURI-1.2",
+      "section": "TAURI-1",
+      "title": "Frontend Build",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "eabfa775ed4c4e11"
+    },
+    {
+      "id": "TAURI-1.3",
+      "section": "TAURI-1",
+      "title": "Capabilities & Permissions",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "43f582213cf181a2"
+    },
+    {
+      "id": "TAURI-1.4",
+      "section": "TAURI-1",
+      "title": "IPC Discipline",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "da7f9f9473407841"
+    },
+    {
+      "id": "TAURI-2.1",
+      "section": "TAURI-2",
+      "title": "Signing",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "0f9d0be90c91fca9"
+    },
+    {
+      "id": "TAURI-2.2",
+      "section": "TAURI-2",
+      "title": "Versioning",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "f9099cf1adebc5ea"
+    },
+    {
+      "id": "WASM-1.1",
+      "section": "WASM-1",
+      "title": "Linear Memory Discipline",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "f365caca3f759b08"
+    },
+    {
+      "id": "WASM-1.2",
+      "section": "WASM-1",
+      "title": "wasm-bindgen Interop",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "79945a7ddede0542"
+    },
+    {
+      "id": "WASM-1.3",
+      "section": "WASM-1",
+      "title": "Async & JS FFI",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "449317854662c4cd"
+    },
+    {
+      "id": "WASM-1.4",
+      "section": "WASM-1",
+      "title": "Size & Startup Budgets",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "f336dfca446f9909"
+    },
+    {
+      "id": "WASM-2.1",
+      "section": "WASM-2",
+      "title": "Target Selection",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "02ea96607c17e21b"
+    },
+    {
+      "id": "WASM-2.2",
+      "section": "WASM-2",
+      "title": "Testing on Target",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "1b5fd917ddb4b9bf"
+    },
+    {
+      "id": "AXUM-1.1",
+      "section": "AXUM-1",
+      "title": "Handler Shape",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "ca8841bb8f562e95"
+    },
+    {
+      "id": "AXUM-1.2",
+      "section": "AXUM-1",
+      "title": "Error Middleware",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "f026f0f4018bba52"
+    },
+    {
+      "id": "AXUM-1.3",
+      "section": "AXUM-1",
+      "title": "State & Extensions",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "cb9c64fe794cba29"
+    },
+    {
+      "id": "AXUM-1.4",
+      "section": "AXUM-1",
+      "title": "Routing & Middleware Order",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "532cd2b92d6f3446"
+    },
+    {
+      "id": "LIB-1.1",
+      "section": "LIB-1",
+      "title": "Public API Surface",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "8a5ce550c4c2dc5a"
+    },
+    {
+      "id": "LIB-1.2",
+      "section": "LIB-1",
+      "title": "SemVer Discipline",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "f522c0f1c2e70c6b"
+    },
+    {
+      "id": "LIB-1.3",
+      "section": "LIB-1",
+      "title": "Documentation & Examples",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "b06d563e5b0c3760"
+    },
+    {
+      "id": "LIB-1.4",
+      "section": "LIB-1",
+      "title": "Dependency Hygiene",
+      "severity": "mandatory",
+      "tags": [],
+      "body_checksum": "35f4c46af3b226f4"
+    }
+  ],
+  "overrides": []
+}

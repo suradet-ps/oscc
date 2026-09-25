@@ -1,0 +1,20 @@
+[package]
+name = "oscc-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "OSCC central API — the only writer of OSCC data (AGENTS.md §3)"
+
+[dependencies]
+anyhow.workspace = true
+axum.workspace = true
+serde.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+http-body-util = "0.1"                            # collect response bodies in API tests
+serde_json.workspace = true                       # assert on JSON payloads
+tower = { version = "0.5", features = ["util"] }  # ServiceExt::oneshot in API tests

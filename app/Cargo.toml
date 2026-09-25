@@ -1,0 +1,22 @@
+# Separate workspace on purpose (AGENTS-RUST.md §14 override): this crate
+# compiles for wasm32-unknown-unknown and must not share the native graph.
+[workspace]
+
+[package]
+name = "oscc-app"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "OSCC desktop client — Leptos 0.8 CSR workbench for department PCs"
+
+[lib]
+name = "oscc_app"
+path = "src/lib.rs"
+
+[[bin]]
+name = "oscc-app"
+path = "src/main.rs"
+
+[dependencies]
+console_error_panic_hook = "0.1"  # readable panics in the browser console during dev
+leptos = { version = "0.8", features = ["csr"] }  # CSR frontend framework

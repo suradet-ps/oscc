@@ -1,0 +1,10 @@
+[package]
+name = "oscc-hosxp-connector"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "The only crate allowed to talk to HOSxP — SELECT-only, guarded, parameterized"
+
+[dependencies]
+thiserror.workspace = true

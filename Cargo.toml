@@ -29,7 +29,7 @@ argon2 = "0.5"               # Argon2id password hashing for local accounts
 async-trait = "0.1"          # dyn-compatible async patient-source trait
 axum = "0.8"                 # HTTP API for the central server
 chrono = { version = "0.4", default-features = false, features = ["serde", "std"] }  # timestamps for cases and deadlines
-encryptman = "0.3.0"         # AES-256-GCM encrypted HOSxP credentials at rest
+encryptman = "0.5.0"         # AES-256-GCM encrypted HOSxP credentials at rest
 encryptman-keyring = "0.1.3"  # OS-keychain storage of the encryptman master key
 hex = "0.4"                  # hex encoding for audit hashes and tokens
 rand = "0.8"                 # session token material

@@ -36,7 +36,7 @@ rand = "0.8"                 # session token material
 secrecy = { version = "0.10", features = ["serde"] }  # secrets: zeroized on drop, Debug-redacted
 serde = { version = "1.0", features = ["derive"] }  # IPC and API payloads
 serde_json = "1.0"           # structured API payloads
-sha2 = "0.10"                # SHA-256 for audit chain and token storage
+sha2 = "0.11"                # SHA-256 for audit chain and token storage
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "mysql", "postgres", "chrono", "tls-rustls-ring-native-roots", "migrate", "macros"] }  # HOSxP reads (MySQL) and OSCC storage (PostgreSQL)
 tempfile = "3"               # disposable directories in tests
 thiserror = "2"              # structured errors in library crates

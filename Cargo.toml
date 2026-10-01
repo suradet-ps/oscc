@@ -41,6 +41,6 @@ sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio",
 tempfile = "3"               # disposable directories in tests
 thiserror = "2"              # structured errors in library crates
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time", "net", "fs"] }  # async runtime
-tower-http = { version = "0.6", features = ["cors"] }  # LAN CORS for the desktop webview
+tower-http = { version = "0.7", features = ["cors"] }  # LAN CORS for the desktop webview
 tracing = "0.1"              # PII-free structured logging
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }  # log wiring
